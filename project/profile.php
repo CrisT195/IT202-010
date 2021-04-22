@@ -105,10 +105,47 @@ if (isset($_POST["saved"])) {
         //else for $isValid, though don't need to put anything here since the specific failure will output the message
     }
 }
-
-
+?>
+<?php
+//add scores...
+$results = [];
+$db = getDB();
+$user = get_user_id();
+$stmt = $db->prepare("SELECT Users.id, username, score, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC LIMIT 10");
+$r = $stmt->execute([":id" => $user]);
+if ($r) {
+	$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+else {
+	flash("There was a problem fetching the results");
+}
+//$results = getTopWeeklyScores(); //to test function
 ?>
 
+   <div class="results">
+    <?php if (count($results) > 0): ?>
+        <div class="list-group">
+            <?php foreach ($results as $r): ?>
+                <div class="list-group-item">
+                    <div>
+                        <span>Username:</span>
+                        <span><?php safer_echo($r["username"]); ?></span>
+                    </div>
+                    <div>
+                        <span>Score:</span>
+                        <span><?php safer_echo($r["score"]); ?></span>
+                    </div>
+			<br>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p>No results</p>
+    <?php endif; ?>
+</div>
+
+
+<br><br><br>
     <form method="POST">
         <label for="email">Email</label>
         <input type="email" name="email" value="<?php safer_echo(get_email()); ?>"/>
