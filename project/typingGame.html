@@ -1,0 +1,200 @@
+<html>
+  <head>
+   
+    <title>Typing Game</title>  
+    <style>
+.game {
+  box-sizing: border-box;
+}
+
+.game {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+  margin: 0;
+  background-color: #ffffff;
+}
+
+.game,
+.quote-input,
+.quote-display {
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+}
+
+.gameContainer {
+  background-color: #96cefc;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 700px;
+  max-width: 90%;
+}
+
+.timer {
+  position: absolute;
+  top: 10rem;
+  font-size: 3rem;
+  color: #4fa8f0;
+  font-weight: bold;
+}
+
+#score {
+  position: absolute;
+  top: 15rem;
+  font-size: 2rem;
+  color: #4fa8f0;
+}
+
+.quote-display {
+  margin-bottom: 1rem;
+  margin-left: calc(1rem + 2px);
+  margin-right: calc(1rem + 2px);
+}
+
+.quote-input {
+  background-color: transparent;
+  border: 2px solid #a1922e;
+  outline: none;
+  width: 100%;
+  height: 8rem;
+  margin: auto;
+  resize: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
+
+.quote-input:focus {
+  border-color: black;
+}
+
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+  text-decoration: underline;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+</script>
+
+  </head>  
+  <body>
+   <div class="game">
+    <div class="timer" id="timer"></div>
+    <div id="score"></div>
+    <div class="gameContainer">
+      <div class="quote-display" id="quoteDisplay"></div>
+      <textarea id="quoteInput" class="quote-input" autofocus></textarea>
+    </div>
+   </div>
+    
+    <script>
+	const RANDOM_QUOTE_API_URL = "https://api.quotable.io/random";
+const quoteDisplayElement = document.getElementById("quoteDisplay");
+const quoteInputElement = document.getElementById("quoteInput");
+const timerElement = document.getElementById("timer");
+var score;
+var intervalID;
+var quoteLen = 0;
+
+quoteInputElement.addEventListener("input", () => {
+  const arrayQuote = quoteDisplayElement.querySelectorAll("span");
+  const arrayValue = quoteInputElement.value.split("");
+
+  //added this    problems: 1) starts timer only when pause in typing   2) continues timer through next round
+  if (quoteInputElement.value != "" && !(timerElement.innerText > 0)) {
+    console.log("timerElement: " + timerElement.innerText);
+    console.log("quoteInputElelment: " + quoteInputElement.value);
+    startTimer();
+  }
+
+  let correct = true;
+  arrayQuote.forEach((characterSpan, index) => {
+    const character = arrayValue[index];
+    if (character == null) {
+      characterSpan.classList.remove("correct");
+      characterSpan.classList.remove("incorrect");
+      correct = false;
+    } else if (character === characterSpan.innerText) {
+      characterSpan.classList.add("correct");
+      characterSpan.classList.remove("incorrect");
+    } else {
+      characterSpan.classList.remove("correct");
+      characterSpan.classList.add("incorrect");
+      correct = false;
+    }
+  });
+
+  if (correct) {
+    //renderNewQuote();
+    timerElement.innerText = 0;
+    var time = getTimerTime();
+    clearInterval(intervalID);
+    var score = document.getElementById("score");
+    var wpm = parseInt((quoteLen * 60) / time);
+    console.log("len:" + quoteLen + " time:" + time + " wpm:"+ wpm);
+    score.innerText = "Score: " + wpm + " words/min";
+    clearInterval(intervalID);
+	
+//    var xhttp;
+//    xhttp.open("GET", "home.php?score=" + wpm, true);
+//    xhttp.send();
+
+//   var a = document.createElement('a');
+//   var link = document.createTextNode("Save score");
+//   a.appendChild(link);
+//   a.title = "Save Score";
+//   a.href = "http://52.15.49.233/~cth9/repo/project/home.php?score=" + wpm;
+//   document.body.appendChild(a);
+
+   $.ajax({
+	url: 'home.php',
+	type: "POST",
+	dataType:'json',
+	data: ({"score": wpm}),
+	success: function(data){
+		console.log(data);
+	}
+	});
+  }
+});
+
+function getRandomQuote() {
+  return fetch(RANDOM_QUOTE_API_URL)
+    .then((response) => response.json())
+    .then((data) => data.content);
+}
+
+async function renderNewQuote() {
+  const quote = await getRandomQuote();
+  quoteDisplayElement.innerHTML = "";
+  quote.split("").forEach((character) => {
+    if (character == " " || character == ".") quoteLen = quoteLen + 1;    
+    const characterSpan = document.createElement("span");
+    characterSpan.innerText = character;
+    quoteDisplayElement.appendChild(characterSpan);
+  });
+  quoteInputElement.value = null;
+  //startTimer();
+}
+
+let startTime;
+function startTimer() {
+  timerElement.innerText = 0;
+  startTime = new Date();
+  intervalID = setInterval(() => {
+    timerElement.innerText = getTimerTime();
+  }, 1000);
+}
+
+function getTimerTime() {
+  return Math.floor((new Date() - startTime) / 1000);
+}
+
+renderNewQuote();
+    </script>
+  </body>
+</html>
