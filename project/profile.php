@@ -122,7 +122,7 @@ else {
 //$results = getTopWeeklyScores(); //to test function
 ?>
 
-   <div class="results">
+   <div class="results container">
     <?php if (count($results) > 0): ?>
         <div class="list-group">
             <?php foreach ($results as $r): ?>
@@ -135,7 +135,6 @@ else {
                         <span>Score:</span>
                         <span><?php safer_echo($r["score"]); ?></span>
                     </div>
-			<br>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -146,16 +145,26 @@ else {
 
 
 <br><br><br>
+<div class="container">
     <form method="POST">
-        <label for="email">Email</label>
-        <input type="email" name="email" value="<?php safer_echo(get_email()); ?>"/>
-        <label for="username">Username</label>
-        <input type="text" maxlength="60" name="username" value="<?php safer_echo(get_username()); ?>"/>
-        <!-- DO NOT PRELOAD PASSWORD-->
-        <label for="pw">Password</label>
-        <input type="password" name="password"/>
-        <label for="cpw">Confirm Password</label>
-        <input type="password" name="confirm"/>
-        <input type="submit" name="saved" value="Save Profile"/>
+	<div class="form-group">
+            <label for="email">Email</label>
+            <input class="form-control" type="email" name="email" value="<?php safer_echo(get_email()); ?>"/>
+	</div>
+	<div class="form-group">
+            <label for="username">Username</label>
+            <input class="form-control" type="text" maxlength="60" name="username" value="<?php safer_echo(get_username()); ?>"/>
+	</div>
+	<div class="form-group">
+            <!-- DO NOT PRELOAD PASSWORD-->
+            <label for="pw">Password</label>
+            <input class="form-control" type="password" name="password"/>
+	</div>
+	<div class="form-group">
+            <label for="cpw">Confirm Password</label>
+            <input class="form-control" type="password" name="confirm"/>
+	</div>
+        <input class="btn btn-primary" type="submit" name="saved" value="Save Profile"/>
     </form>
+</div>
 <?php require(__DIR__ . "/partials/flash.php");
