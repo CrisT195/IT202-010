@@ -105,7 +105,7 @@ quoteInputElement.addEventListener("input", () => {
   const arrayValue = quoteInputElement.value.split("");
 
   //added this    problems: 1) starts timer only when pause in typing   2) continues timer through next round
-  if (quoteInputElement.value != "" && !(timerElement.innerText > 0)) {
+  if (quoteInputElement.value != "" && (timerElement.innerText === "")) {
     console.log("timerElement: " + timerElement.innerText);
     console.log("quoteInputElelment: " + quoteInputElement.value);
     startTimer();
@@ -133,11 +133,13 @@ quoteInputElement.addEventListener("input", () => {
     timerElement.innerText = 0;
     var time = getTimerTime();
     clearInterval(intervalID);
+    timerElement.innerText = 0;
     var score = document.getElementById("score");
     var wpm = parseInt((quoteLen * 60) / time);
     console.log("len:" + quoteLen + " time:" + time + " wpm:"+ wpm);
     score.innerText = "Score: " + wpm + " words/min";
-    clearInterval(intervalID);
+
+    document.getElementById("quoteInput").disabled = true;
 	
 //    var xhttp;
 //    xhttp.open("GET", "home.php?score=" + wpm, true);

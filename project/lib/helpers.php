@@ -47,6 +47,20 @@ function safer_echo($var) {
     echo htmlspecialchars($var, ENT_QUOTES, "UTF-8");
 }
 
+/*** Attempts to safely retrieve a key from an array, otherwise returns the default
+ * @param $arr
+ * @param $key
+ * @param string $default
+ * @return mixed|string
+ */
+function safe_get($arr, $key, $default = "")
+{
+    if (is_array($arr) && isset($arr[$key])) {
+        return $arr[$key];
+    }
+    return $default;
+}
+
 //for flash feature
 function flash($msg) {
     if (isset($_SESSION['flash'])) {
@@ -69,6 +83,38 @@ function getMessages() {
 }
 
 //end flash
+
+function get_points_balance(){
+	$uid = get_user_id();
+	$db = getDB();
+	$query = "SELECT IFNULL(points,0) as `points` from Userstats where user_id = :id";
+	$stmt = $db->prepare($query);
+	$r = $stmt->execute([":id"=>$uid]);
+	if($r){
+	    $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+	    if(isset($stats["points"])){
+		return (int)$stats["points"];
+	    }
+	}
+	return 0;
+}
+
+function changePoints($user_id, $points, $reason){
+    $db = getDB();
+    $query = "INSERT INTO PointsHistory (user_id, points_change, reason) VALUES (:uid, :change, :reason)";
+    $stmt = $db->prepare($query);
+    $r = $stmt->execute([":uid" => $user_id, ":change" => $points, ":reason" => $reason]);
+    if ($r) {
+        $query = "UPDATE Userstats set points = IFNULL((SELECT sum(points_change) FROM PointsHistory where user_id = :uid),0) WHERE user_id = :uid";
+        $stmt = $db->prepare($query);
+        $r = $stmt->execute([":uid" => $user_id]);
+
+        //refresh session data
+        $_SESSION["user"]["points"] = get_points_balance();
+        return $r;
+    }
+    return false;
+}
 
 //scoreboards
 function getTopWeeklyScores() {
