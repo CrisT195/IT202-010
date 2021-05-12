@@ -6,7 +6,13 @@ if (isset($_SESSION["user"]) && isset($_SESSION["user"]["email"])) {
     $email = $_SESSION["user"]["email"];
 }
 ?>
-<p>Welcome, <?php echo $email; ?></p>
+<div style="text-align: center;">
+  <?php if(is_logged_in()):?>
+    <p>Welcome, <?php echo $email; ?></p>
+  <?php else:?>
+    <p>You are not logged in. Your score will not be recorded.</p>
+  <?php endif;?>
+</div>
 <?php include('typingGame.html'); ?>
 
 <?php
@@ -22,6 +28,7 @@ if(isset($_SESSION["user"]) && isset($_SESSION["user"]["id"]) && isset($_POST["s
 		":user"=>$user
 	]);
 	if($r){
+		changePoints($user, $score, "completed game");
 		flash("Created successfully with id: " . $db->lastInsertId());
 	}
 	else{

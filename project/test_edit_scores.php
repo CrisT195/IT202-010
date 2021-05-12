@@ -10,11 +10,11 @@ if (!has_role("Admin")) {
 
 <?php
 //we'll put this at the top so both php block have access to it
- if(isset($_GET["username"])){
-	$username = $_GET["username"];
-	echo $username;
+ if(isset($_GET["scoreid"])){
+	$scoreid = $_GET["scoreid"];
+//	echo $scoreid;
 } else {
-	echo "get username failure ";
+	echo "get score failure ";
 }
 ?>
 
@@ -25,15 +25,15 @@ if(isset($_POST["save"])){
 	$score = $_POST["score"];
 	$user_id = get_user_id();
 	$db = getDB();
-	if(isset($username)){
-		$stmt = $db->prepare("UPDATE Scores set score=:score where user_id=:user_id");
+	if(isset($scoreid)){
+		$stmt = $db->prepare("UPDATE Scores set score=:score where id=:scoreid");
 		//$stmt = $db->prepare("INSERT INTO Scores (score, user_id) VALUES(:score, :state,:user)");
 		$r = $stmt->execute([
 			":score"=>$score,
-			":user_id"=>$user_id
+			":scoreid"=>$scoreid
 		]);
 		if($r){
-			flash("Updated successfully with user_id: " . $user_id);
+			flash("Updated successfully with user_id: " . $scoreid);
 		}
 		else{
 			$e = $stmt->errorInfo();
@@ -49,19 +49,21 @@ if(isset($_POST["save"])){
 <?php
 //fetching
 $result = [];
-if(isset($username)){
-	$username = $_GET["username"];
+if(isset($scoreid)){
+	$scoreid = $_GET["scoreid"];
 	$db = getDB();
-	$stmt = $db->prepare("SELECT Users.id, username, score FROM Users JOIN Scores on Users.id = Scores.user_id WHERE username like :username");
-	$r = $stmt->execute([":username"=>$username]);
+	$stmt = $db->prepare("SELECT Users.id, username, score FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Scores.id like :scoreid");
+	$r = $stmt->execute([":scoreid"=>$scoreid]);
 	$result = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 ?>
 
+<div class="container">
 <form method="POST">
 	<label>Score</label>
 	<input type="number" min="0" name="score" value="<?php echo $result["score"];?>" />
 	<input type="submit" name="save" value="Update"/>
 </form>
+</div>
 
 <?php require(__DIR__ . "/partials/flash.php");

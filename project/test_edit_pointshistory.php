@@ -9,11 +9,10 @@ if (!has_role("Admin")) {
 
 <?php
 //we'll put this at the top so both php block have access to it
-if(isset($_GET["username"])){
-	$username = $_GET["username"];
-	echo $username;
+if(isset($_GET["historyid"])){
+	$historyid = $_GET["historyid"];
 } else {
-	echo "get username failure";
+	echo "get point history id failure";
 }
 ?>
 
@@ -25,16 +24,16 @@ if(isset($_POST["save"])){
 	$reason = $_POST["reason"];
 	$user_id = get_user_id();
 	$db = getDB();
-	if(isset($username)){
-		$stmt = $db->prepare("UPDATE PointsHistory set points_change=:points_change,reason=:reason where user_id=:user_id");
+	if(isset($historyid)){
+		$stmt = $db->prepare("UPDATE PointsHistory set points_change=:points_change,reason=:reason where id=:historyid");
 		//$stmt = $db->prepare("INSERT INTO Scores (score, user_id) VALUES(:score, :state,:user)");
 		$r = $stmt->execute([
 			":points_change"=>$points_change,
 			":reason"=>$reason,
-			":user_id"=>$user_id
+			":historyid"=>$historyid
 		]);
 		if($r){
-			flash("Updated successfully with user_id: " . $user_id);
+			flash("Updated successfully with historyid: " . $historyid);
 		}
 		else{
 			$e = $stmt->errorInfo();
@@ -50,15 +49,16 @@ if(isset($_POST["save"])){
 <?php
 //fetching
 $result = [];
-if(isset($username)){
-	$username = $_GET["username"];
+if(isset($historyid)){
+	$historyid = $_GET["historyid"];
 	$db = getDB();
-	$stmt = $db->prepare("SELECT Users.id, username, points_change, reason FROM Users JOIN PointsHistory on Users.id = PointsHistory.user_id WHERE username like :username");
-	$r = $stmt->execute([":username"=>$username]);
+	$stmt = $db->prepare("SELECT Users.id, username, points_change, reason FROM Users JOIN PointsHistory on Users.id = PointsHistory.user_id WHERE PointsHistory.id like :historyid");
+	$r = $stmt->execute([":historyid"=>$historyid]);
 	$result = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 ?>
 
+<div class="container">
 <form method="POST">
 	<label>Points change</label>
 	<input type="number" min="0" name="points_change" value="<?php echo $result['points_change'];?>" />
@@ -66,5 +66,6 @@ if(isset($username)){
 	<input type="text" name="reason" value="<?php echo $result['reason'];?>" />
 	<input type="submit" name="save" value="Update"/>
 </form>
+</div>
 
 <?php require(__DIR__ . "/partials/flash.php");

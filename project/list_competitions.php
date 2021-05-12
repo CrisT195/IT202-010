@@ -6,15 +6,32 @@ if (!is_logged_in()) {
 }
 ?>
 <?php
-    $query = "SELECT c.*, (select count(1) from Usercompetitions uc where uc.competition_id = c.id and uc.user_id = :uid) as `registered` FROM Competitions c WHERE expires > CURDATE() AND calced_winner != 1 ORDER BY expires asc LIMIT 50";
     $db = getDB();
+    $query = "SELECT count(1) as total FROM Competitions c WHERE expires > CURDATE() AND calced_winner != 1 ORDER BY expires asc";
     $stmt = $db->prepare($query);
     $r = $stmt->execute([":uid" => get_user_id()]);
+    $total_pages = 0;
+    if($r){
+	$result = $stmt->fetch(PDO::FETCH_ASSOC);
+	$total_pages = (int)safe_get($result, "total", 0);
+    }
+    $items_per_page = 10;
+    $total_pages = ceil($total_pages/$items_per_page);
+    $page = (int)safe_get($_GET, "page", 1);
+    if($page < 1){
+	$page = 1;
+    }
+    $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    $offset = ($page - 1) * $items_per_page;
+
+    $query = "SELECT c.*, (select count(1) from Usercompetitions uc where uc.competition_id = c.id and uc.user_id = :uid) as `registered` FROM Competitions c WHERE expires > CURDATE() AND calced_winner != 1 ORDER BY expires asc LIMIT :offset, :limit";
+    $stmt = $db->prepare($query);
+    $r = $stmt->execute([":uid" => get_user_id(), ":offset" => $offset, ":limit" => $items_per_page]);
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     //echo var_export($results, true);
 ?>
 <br>
-<div class="container-fluid">
+<div class="container">
 <div class="h3">Active Competitions</div>
     <?php if(count($results) > 0):?>
 	<ul class="list-group">
@@ -26,6 +43,8 @@ if (!is_logged_in()) {
 			<div class="col">Ends: <?php safer_echo(safe_get($c, "expires", "N/A"));?></div>
 			<div class="col">Reward: <?php safer_echo(safe_get($c, "points", 0));?></div>
 			<div class="col">
+			    <button class="btn btn-primary" onClick="window.location.href='#';">View
+			    </button>
 			    <?php if(safe_get($c, "registered", 0) == 0):?>
 			    <button id="<?php safer_echo(safe_get($c, 'id', -1));?>" class="btn btn-primary" onclick="join(<?php safer_echo(safe_get($c, 'id', -1));?>)">Join (<?php $cost = (int)safe_get($c, "entry_fee", 0); safer_echo($cost?"Cost: $cost":"Cost: Free");?>)
 			    </button>
@@ -41,7 +60,29 @@ if (!is_logged_in()) {
     <?php else:?>
 	<p>No competitions available yet, please check back later</p>
     <?php endif;?>
+
+
+<ul class="pagination">
+  <?php if(($page - 1) >= 1):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page - 1));?>" aria-label="Previous">
+	    <span aria-hidden="true">&laquo;</span>
+	</a>
+    </li>
+  <?php endif; ?>
+  <?php for($i = 0; $i < $total_pages; $i++):?>
+    <li class="page-item"><a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($i + 1));?>"><?php safer_echo(($i+1));?></a></li>
+  <?php endfor; ?>
+  <?php if(($page +1) <= $total_pages):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page+1));?>" aria-label="Next">
+	    <span aria-hidden="true">&raquo;</span>
+	</a>
+    </li>
+  <?php endif;?>
+</ul>
 </div>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
 </script>
 <script>

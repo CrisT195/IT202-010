@@ -8,17 +8,17 @@ if (!has_role("Admin")) {
 ?>
 <?php
 //we'll put this at the top so both php block have access to it
-if (isset($_GET["username"])) {
- $username = $_GET["username"];
+if (isset($_GET["historyid"])) {
+ $historyid = $_GET["historyid"];
 }
 ?>
 <?php
 //fetching
 $result = [];
-if (isset($username)) {
+if (isset($historyid)) {
  $db = getDB();
- $stmt = $db->prepare("SELECT Users.id, points_change, reason, user_id, Users.username, PointsHistory.id FROM Users JOIN PointsHistory on Users.id = PointsHistory.user_id where Users.username = :username");
- $r = $stmt->execute([":username" => $username]);
+ $stmt = $db->prepare("SELECT Users.id, points_change, reason, user_id, Users.username, PointsHistory.id FROM Users JOIN PointsHistory on Users.id = PointsHistory.user_id where PointsHistory.id = :historyid");
+ $r = $stmt->execute([":historyid" => $historyid]);
  $result = $stmt->fetch(PDO::FETCH_ASSOC);
  if (!$result) {
   $e = $stmt->errorInfo();

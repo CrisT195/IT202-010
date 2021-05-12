@@ -105,6 +105,11 @@ function changePoints($user_id, $points, $reason){
     $stmt = $db->prepare($query);
     $r = $stmt->execute([":uid" => $user_id, ":change" => $points, ":reason" => $reason]);
     if ($r) {
+	$query = "INSERT IGNORE INTO Userstats (user_id) VALUES (:uid)";
+	$stmt = $db->prepare($query);
+	$r = $stmt->execute([":uid" => $user_id]);
+
+
         $query = "UPDATE Userstats set points = IFNULL((SELECT sum(points_change) FROM PointsHistory where user_id = :uid),0) WHERE user_id = :uid";
         $stmt = $db->prepare($query);
         $r = $stmt->execute([":uid" => $user_id]);

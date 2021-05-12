@@ -8,23 +8,26 @@ if (!has_role("Admin")) {
 ?>
 <?php
 //we'll put this at the top so both php block have access to it
-if (isset($_GET["username"])) {
-    $username = $_GET["username"];
+if (isset( $_GET["scoreid"])) {
+    $scoreid = $_GET["scoreid"];
 }
 ?>
 <?php
 //fetching
 $result = [];
-if (isset($username)) {
+if (isset($scoreid)) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT Users.id,score, user_id, Users.username, Scores.id FROM Users JOIN Scores on Users.id = Scores.user_id where Users.username = :username");
-    $r = $stmt->execute([":username" => $username]);
+    $stmt = $db->prepare("SELECT Users.id, score, user_id, Users.username, Scores.id FROM Users JOIN Scores on Users.id = Scores.user_id where Scores.id = :scoreid");
+    $r = $stmt->execute([":scoreid" => $scoreid]);
+//    flash(var_export($r, true));
+//    flash(var_export($stmt->errorInfo(), true));
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$result) {
         $e = $stmt->errorInfo();
         flash($e[2]);
     }
 }
+//var_dump($_SESSION);
 ?>
 <?php if (isset($result) && !empty($result)): ?>
     <div class="card">

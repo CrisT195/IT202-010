@@ -33,6 +33,17 @@ if (isset($_POST["compId"])) {
 				$stmt->execute([":cid"=>$compId]);
                                 $response["status"] = 200;
                                 $response["message"] = "Joined successfully";
+
+				$query = "SELECT points FROM `Competitions` WHERE id = :cid";
+				$stmt = $db->prepare($query);
+				$rs = $stmt->execute([":cid"=>$compId]);
+				$result = $stmt->fetch(PDO::FETCH_ASSOC);
+				$points = (int)safe_get($result, "points", 0);
+				$sPoints = (int)($points + 1 + ($points / 2));
+
+				$query = "UPDATE Competitions set points = :p where id = :cid";
+				$stmt = $db->prepare($query);
+				$stmt->execute([":p"=>$sPoints, ":cid" => $compId]);
                             } else {
                                 $e = $stmt->errorInfo();
                                 if ($e[0] == "23000") {

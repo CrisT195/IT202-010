@@ -62,10 +62,20 @@ if (isset($_POST["saved"])) {
         else {
             $newUsername = $username;
         }
+    } //
+    $vis = 0;
+    if(isset($_POST["visibility"])){
+	$visibility = $_POST["visibility"];
+	if($visibility == "public"){
+	    $vis = 1;
+	} else {
+	    $vis = 0;
+	}
     }
+	//
     if ($isValid) {
-        $stmt = $db->prepare("UPDATE Users set email = :email, username= :username where id = :id");
-        $r = $stmt->execute([":email" => $newEmail, ":username" => $newUsername, ":id" => get_user_id()]);
+        $stmt = $db->prepare("UPDATE Users set email = :email, username= :username, visibility = :visibility where id = :id");
+        $r = $stmt->execute([":email" => $newEmail, ":username" => $newUsername, ":visibility" => $vis, ":id" => get_user_id()]);
         if ($r) {
             flash("Updated profile");
         }
@@ -90,15 +100,17 @@ if (isset($_POST["saved"])) {
             }
         }
 //fetch/select fresh data in case anything changed
-        $stmt = $db->prepare("SELECT email, username from Users WHERE id = :id LIMIT 1");
+        $stmt = $db->prepare("SELECT email, username, visibility from Users WHERE id = :id LIMIT 1");
         $stmt->execute([":id" => get_user_id()]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($result) {
             $email = $result["email"];
             $username = $result["username"];
+	    $visibility = $result["visibility"];
             //let's update our session too
             $_SESSION["user"]["email"] = $email;
             $_SESSION["user"]["username"] = $username;
+	    $_SESSION["user"]["visibility"] = $visibility;
         }
     }
     else {
@@ -107,30 +119,80 @@ if (isset($_POST["saved"])) {
 }
 ?>
 <?php
-//add scores...
-$results = [];
-$db = getDB();
-$user = get_user_id();
-$stmt = $db->prepare("SELECT Users.id, username, score, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC LIMIT 10");
-$r = $stmt->execute([":id" => $user]);
-if ($r) {
+  //add scores...
+  $db = getDB();
+  //fetch count of filtered results
+  $query = "SELECT count(1) as total FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC";
+  $stmt = $db->prepare($query);
+  $user = get_user_id();
+  $r = $stmt->execute([":id" => $user]);
+  $total_pages = 0;
+  if($r){
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+      $total_pages = (int)safe_get($result, "total", 0);
+  }
+  $items_per_page = 10;
+  //calc number of pages
+  $total_pages = ceil($total_pages/$items_per_page);
+  //get current page (default to 1)
+  $page = (int)safe_get($_GET, "page", 1);
+  if($page < 1){
+      $page = 1;
+  }
+  $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+  //determine offset for running the data query
+  $offset = ($page - 1) * $items_per_page;
+
+  $results = [];
+  $stmt = $db->prepare("SELECT Users.id, username, score, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC LIMIT :offset, :limit");
+  $r = $stmt->execute([":id" => $user, ":offset" => $offset, ":limit" => $items_per_page]);
+  //flash(var_export($stmt->errorInfo(), true));
+  if ($r) {
 	$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-else {
+  }
+  else {
 	flash("There was a problem fetching the results");
-}
-//$results = getTopWeeklyScores(); //to test function
+  }
+  //$results = getTopWeeklyScores(); //to test function
 ?>
 
-   <div class="results container">
+<?php
+  //competition history...
+  $db = getDB();
+  $query = "SELECT count(1) as total FROM Competitions JOIN Usercompetitions on Usercompetitions.competition_id = Competitions.id WHERE Usercompetitions.user_id = :id ORDER BY Competitions.expires DESC";
+  $stmt = $db->prepare($query);
+  $r = $stmt->execute([":id" => get_user_id()]);
+  $total_pages_comp = 0;
+  if($r){
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_pages_comp = (int)safe_get($result, "total", 0);
+  }
+  $items_per_page = 10;
+  $total_pages_comp = ceil($total_pages_comp/$items_per_page);
+  $page = (int)safe_get($_GET, "page", 1);
+  if($page < 1){
+    $page = 1;
+  }
+  $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+  $offset = ($page - 1) * $items_per_page;
+
+  $query = "SELECT Competitions.* FROM Competitions JOIN Usercompetitions on Usercompetitions.competition_id = Competitions.id WHERE Usercompetitions.user_id = :id ORDER BY expires DESC LIMIT :offset, :limit";
+  $stmt = $db->prepare($query);
+  $r = $stmt->execute([":id" => get_user_id(), ":offset" => $offset, ":limit" => $items_per_page]);
+  $results_comp = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+<br>
+<div class="container">Your Scores
+   <div class="results">
     <?php if (count($results) > 0): ?>
         <div class="list-group">
             <?php foreach ($results as $r): ?>
                 <div class="list-group-item">
-                    <div>
+               <!--     <div>
                         <span>Username:</span>
                         <span><?php safer_echo($r["username"]); ?></span>
-                    </div>
+                    </div>   -->
                     <div>
                         <span>Score:</span>
                         <span><?php safer_echo($r["score"]); ?></span>
@@ -141,10 +203,72 @@ else {
     <?php else: ?>
         <p>No results</p>
     <?php endif; ?>
+  </div>
+
+<ul class="pagination">
+  <?php if(($page-1) >=1):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page - 1));?>" aria-label="Previous">
+	    <span aria-hidden="true">&laquo;</span>
+	</a>
+    </li>
+  <?php endif; ?>
+  <?php for($i = 0; $i < $total_pages; $i++):?>
+    <li class="page-item"><a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($i+1));?>"><?php safer_echo(($i+1));?></a></li>
+  <?php endfor; ?>
+  <?php if(($page+1) <= $total_pages):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page+1));?>" aria-label="Next">
+	    <span aria-hidden="true">&raquo;</span>
+	</a>
+    </li>
+  <?php endif;?>
+</ul>
+</div> <br>
+
+
+<div class="container">
+  <div class="h3">Competition History</div>
+  <?php if(count($results_comp) > 0):?>
+    <ul class="list-group">
+      <?php foreach($results_comp as $c):?>
+	<li class="list-group-item">
+	  <div class="row">
+	    <div class="col"><?php safer_echo(safe_get($c, "title", "N/A"));?></div>
+	    <div class="col">Participants: <?php safer_echo(safe_get($c, "participants", 0));?> / <?php safer_echo(safe_get($c, "min_participants", 0));?></div>
+	    <div class="col">Ends: <?php safer_echo(safe_get($c, "expires", "N/A"));?></div>
+	    <div class="col">Reward: <?php safer_echo(safe_get($c, "points", 0));?></div>
+	  </div>
+	</li>
+      <?php endforeach;?>
+    </ul>
+  <?php else:?>
+    <p>No competition history available yet, try joining a competition</p>
+  <?php endif;?>
+
+<ul class="pagination">
+  <?php if(($page - 1) >= 1):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page-1));?>" aria-label="Previous">
+	    <span aria-hidden="true">&laquo;</span>
+	</a>
+    </li>
+  <?php endif; ?>
+  <?php for($i = 0; $i < $total_pages_comp; $i++):?>
+    <li class="page-item"><a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($i + 1));?>"><?php safer_echo(($i+1));?></a></li>
+  <?php endfor; ?>
+  <?php if(($page+1) <= $total_pages_comp):?>
+    <li class="page-item">
+	<a class="page-link" href="<?php safer_echo($_SERVER['PHP_SELF'] . "?page=" . ($page+1));?>" aria-label="Next">
+	    <span aria-hidden="true">&raquo;</span>
+	</a>
+    </li>
+  <?php endif;?>
+</ul>
 </div>
 
 
-<br><br><br>
+<br><br>
 <div class="container">
     <form method="POST">
 	<div class="form-group">
@@ -163,6 +287,10 @@ else {
 	<div class="form-group">
             <label for="cpw">Confirm Password</label>
             <input class="form-control" type="password" name="confirm"/>
+	</div>
+	<div class="form-check" style="padding-left:0px;">
+	    <label for="vis" class="form-check-label">Make profile public</label>
+	    <input style="margin-left: -500px;" type="checkbox" class="form-check-input" name="visibility" value="public" checked="checked">
 	</div>
         <input class="btn btn-primary" type="submit" name="saved" value="Save Profile"/>
     </form>

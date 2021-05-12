@@ -10,8 +10,8 @@
 .game {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 90vh;
+  align-items: flex-end;
+  min-height: 70vh;
   margin: 0;
   background-color: #ffffff;
 }
@@ -32,7 +32,7 @@
 
 .timer {
   position: absolute;
-  top: 10rem;
+  top: 8rem;
   font-size: 3rem;
   color: #4fa8f0;
   font-weight: bold;
@@ -40,7 +40,7 @@
 
 #score {
   position: absolute;
-  top: 15rem;
+  top: 12rem;
   font-size: 2rem;
   color: #4fa8f0;
 }
@@ -89,8 +89,12 @@
       <div class="quote-display" id="quoteDisplay"></div>
       <textarea id="quoteInput" class="quote-input" autofocus></textarea>
     </div>
+  <!--  <button class="btn btn-primary btn-xs" type="button">New Quote</button> -->
+  <!--  <button type="button" onclick="location.href = home.php#">New Quote</button> -->
    </div>
-    
+    <div class="container">
+	<input class="btn btn-primary" type="button" value="New Quote" onclick="window.location.href=window.location.href"></input> 
+    </div>
     <script>
 	const RANDOM_QUOTE_API_URL = "https://api.quotable.io/random";
 const quoteDisplayElement = document.getElementById("quoteDisplay");
@@ -130,10 +134,9 @@ quoteInputElement.addEventListener("input", () => {
 
   if (correct) {
     //renderNewQuote();
-    timerElement.innerText = 0;
     var time = getTimerTime();
     clearInterval(intervalID);
-    timerElement.innerText = 0;
+//    timerElement.innerText = 0;
     var score = document.getElementById("score");
     var wpm = parseInt((quoteLen * 60) / time);
     console.log("len:" + quoteLen + " time:" + time + " wpm:"+ wpm);
