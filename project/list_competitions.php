@@ -43,7 +43,7 @@ if (!is_logged_in()) {
 			<div class="col">Ends: <?php safer_echo(safe_get($c, "expires", "N/A"));?></div>
 			<div class="col">Reward: <?php safer_echo(safe_get($c, "points", 0));?></div>
 			<div class="col">
-			    <button class="btn btn-primary" onClick="window.location.href='#';">View
+			    <button class="btn btn-primary" onClick="location.href='view_competition.php?competition=' + <?php safer_echo(safe_get($c, "id", 1));?>;">View
 			    </button>
 			    <?php if(safe_get($c, "registered", 0) == 0):?>
 			    <button id="<?php safer_echo(safe_get($c, 'id', -1));?>" class="btn btn-primary" onclick="join(<?php safer_echo(safe_get($c, 'id', -1));?>)">Join (<?php $cost = (int)safe_get($c, "entry_fee", 0); safer_echo($cost?"Cost: $cost":"Cost: Free");?>)
