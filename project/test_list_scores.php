@@ -14,7 +14,7 @@ if (isset($_POST["query"])) {
 }
 if (isset($_POST["search"]) && !empty($query)) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT Users.id, username, score, user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE username like :q LIMIT 10");
+    $stmt = $db->prepare("SELECT Users.id, username, score, user_id, Scores.id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE username like :q LIMIT 10");
     $r = $stmt->execute([":q" => "%$query%"]);
     if ($r) {
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -24,6 +24,8 @@ if (isset($_POST["search"]) && !empty($query)) {
     }
 }
 ?>
+
+<div class="container">
 <form method="POST">
     <input name="query" placeholder="Search" value="<?php safer_echo($query); ?>"/>
     <input type="submit" value="Search" name="search"/>
@@ -46,8 +48,8 @@ if (isset($_POST["search"]) && !empty($query)) {
                         <div><?php safer_echo($r["user_id"]); ?></div>
                     </div>
                     <div>
-                        <a type="button" href="test_edit_scores.php?username=<?php safer_echo($r['username']); ?>">Edit</a>
-                        <a type="button" href="test_view_scores.php?username=<?php safer_echo($r['username']); ?>">View</a>
+                        <a type="button" href="test_edit_scores.php?scoreid=<?php safer_echo($r['id']); ?>">Edit</a>
+                        <a type="button" href="test_view_scores.php?scoreid=<?php safer_echo($r['id']); ?>">View</a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -55,6 +57,7 @@ if (isset($_POST["search"]) && !empty($query)) {
     <?php else: ?>
         <p>No results</p>
     <?php endif; ?>
+</div>
 </div>
 
 <?php require(__DIR__ . "/partials/flash.php");

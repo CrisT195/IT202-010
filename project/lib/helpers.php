@@ -105,6 +105,11 @@ function changePoints($user_id, $points, $reason){
     $stmt = $db->prepare($query);
     $r = $stmt->execute([":uid" => $user_id, ":change" => $points, ":reason" => $reason]);
     if ($r) {
+	$query = "INSERT IGNORE INTO Userstats (user_id) VALUES (:uid)";
+	$stmt = $db->prepare($query);
+	$r = $stmt->execute([":uid" => $user_id]);
+
+
         $query = "UPDATE Userstats set points = IFNULL((SELECT sum(points_change) FROM PointsHistory where user_id = :uid),0) WHERE user_id = :uid";
         $stmt = $db->prepare($query);
         $r = $stmt->execute([":uid" => $user_id]);
@@ -121,7 +126,7 @@ function getTopWeeklyScores() {
 	$results = [];
 	$db = getDB();
 	$user = get_user_id();
-	$stmt = $db->prepare("SELECT score, username FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Scores.created >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY score DESC LIMIT 10");
+	$stmt = $db->prepare("SELECT score, username, Users.id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Scores.created >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY score DESC LIMIT 10");
 	$r = $stmt->execute();
 	if ($r) {
 		$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -136,7 +141,7 @@ function getTopMonthlyScores() {
         $results = [];
         $db = getDB();
         $user = get_user_id();
-        $stmt = $db->prepare("SELECT score, username FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Scores.created >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ORDER BY score DESC LIMIT 10");
+        $stmt = $db->prepare("SELECT score, username, Users.id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Scores.created >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ORDER BY score DESC LIMIT 10");
         $r = $stmt->execute();
         if ($r) {
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -153,7 +158,7 @@ function getTopOverallScores() {
         $user = get_user_id();
 //	$stmt = $db->prepare("SELECT Users.id, username, score, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC LIMIT 10");
         //$stmt = $db->prepare("SELECT TOP (10) score, Users.id, username, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id ORDER BY score");
-	$stmt = $db->prepare("SELECT score, username FROM Users JOIN Scores on Users.id = Scores.user_id ORDER BY score DESC LIMIT 10");
+	$stmt = $db->prepare("SELECT score, username, Users.id FROM Users JOIN Scores on Users.id = Scores.user_id ORDER BY score DESC LIMIT 10");
         $r = $stmt->execute();
         if ($r) {
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);

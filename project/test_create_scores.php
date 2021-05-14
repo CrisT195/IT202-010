@@ -7,11 +7,13 @@ if (!has_role("Admin")) {
 }
 ?>
 
+<div class="container">
 <form method="POST">
 	<label>Score</label>
 	<input type="number" min="0" name="score"/>
 	<input type="submit" name="save" value="Create"/>
 </form>
+</div>
 
 <?php
 if(isset($_POST["save"])){
