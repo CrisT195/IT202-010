@@ -189,10 +189,6 @@ if (isset($_POST["saved"])) {
         <div class="list-group">
             <?php foreach ($results as $r): ?>
                 <div class="list-group-item">
-               <!--     <div>
-                        <span>Username:</span>
-                        <span><?php safer_echo($r["username"]); ?></span>
-                    </div>   -->
                     <div>
                         <span>Score:</span>
                         <span><?php safer_echo($r["score"]); ?></span>
@@ -238,6 +234,10 @@ if (isset($_POST["saved"])) {
 	    <div class="col">Participants: <?php safer_echo(safe_get($c, "participants", 0));?> / <?php safer_echo(safe_get($c, "min_participants", 0));?></div>
 	    <div class="col">Ends: <?php safer_echo(safe_get($c, "expires", "N/A"));?></div>
 	    <div class="col">Reward: <?php safer_echo(safe_get($c, "points", 0));?></div>
+	    <div class="col">
+		<button class="btn btn-primary" onClick="location.href='view_competition.php?competition=' + <?php safer_echo(safe_get($c, "id", 1));?>;">View
+		</button
+	    </div>
 	  </div>
 	</li>
       <?php endforeach;?>
