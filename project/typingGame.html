@@ -89,8 +89,6 @@
       <div class="quote-display" id="quoteDisplay"></div>
       <textarea id="quoteInput" class="quote-input" autofocus></textarea>
     </div>
-  <!--  <button class="btn btn-primary btn-xs" type="button">New Quote</button> -->
-  <!--  <button type="button" onclick="location.href = home.php#">New Quote</button> -->
    </div>
     <div class="container">
 	<input class="btn btn-primary" type="button" value="New Quote" onclick="window.location.href=window.location.href"></input> 
@@ -108,7 +106,6 @@ quoteInputElement.addEventListener("input", () => {
   const arrayQuote = quoteDisplayElement.querySelectorAll("span");
   const arrayValue = quoteInputElement.value.split("");
 
-  //added this    problems: 1) starts timer only when pause in typing   2) continues timer through next round
   if (quoteInputElement.value != "" && (timerElement.innerText === "")) {
     console.log("timerElement: " + timerElement.innerText);
     console.log("quoteInputElelment: " + quoteInputElement.value);
@@ -136,24 +133,12 @@ quoteInputElement.addEventListener("input", () => {
     //renderNewQuote();
     var time = getTimerTime();
     clearInterval(intervalID);
-//    timerElement.innerText = 0;
     var score = document.getElementById("score");
     var wpm = parseInt((quoteLen * 60) / time);
     console.log("len:" + quoteLen + " time:" + time + " wpm:"+ wpm);
     score.innerText = "Score: " + wpm + " words/min";
 
     document.getElementById("quoteInput").disabled = true;
-	
-//    var xhttp;
-//    xhttp.open("GET", "home.php?score=" + wpm, true);
-//    xhttp.send();
-
-//   var a = document.createElement('a');
-//   var link = document.createTextNode("Save score");
-//   a.appendChild(link);
-//   a.title = "Save Score";
-//   a.href = "http://52.15.49.233/~cth9/repo/project/home.php?score=" + wpm;
-//   document.body.appendChild(a);
 
    $.ajax({
 	url: 'home.php',
