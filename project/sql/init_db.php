@@ -3,12 +3,9 @@
 ini_set('display_errors',1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-//pull in db.php so we can access the variables from it
 require_once (__DIR__ . "/../lib/db.php");
 $count = 0;
 try{
-    //name each sql file in a way that it'll sort correctly to run in the correct order
-    //my samples prefix filenames with #_
     /***
      * Finds all .sql files in structure directory.
      * Generates an array keyed by filename and valued as raw SQL from file
@@ -27,7 +24,7 @@ try{
         //connect to DB
         $db = getDB();
         /***
-         * Let's make this function a bit smarter to save DB calls for small dev plans (i.e., heroku)
+         * make this function a bit smarter to save DB calls for small dev plans (i.e., heroku)
          */
         $stmt = $db->prepare("show tables");
         $stmt->execute();
