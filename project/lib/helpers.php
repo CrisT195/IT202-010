@@ -1,8 +1,7 @@
 <?php
-session_start();//we can start our session here so we don't need to worry about it on other pages
+session_start();
 require_once(__DIR__ . "/db.php");
-//this file will contain any helpful functions we create
-//I have provided two for you
+
 function is_logged_in() {
     return isset($_SESSION["user"]);
 }
@@ -156,8 +155,6 @@ function getTopOverallScores() {
         $results = [];
         $db = getDB();
         $user = get_user_id();
-//	$stmt = $db->prepare("SELECT Users.id, username, score, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id WHERE Users.id = :id ORDER BY score DESC LIMIT 10");
-        //$stmt = $db->prepare("SELECT TOP (10) score, Users.id, username, Scores.user_id FROM Users JOIN Scores on Users.id = Scores.user_id ORDER BY score");
 	$stmt = $db->prepare("SELECT score, username, Users.id FROM Users JOIN Scores on Users.id = Scores.user_id ORDER BY score DESC LIMIT 10");
         $r = $stmt->execute();
         if ($r) {
